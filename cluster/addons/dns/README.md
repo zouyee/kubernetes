@@ -37,7 +37,7 @@ that supply values for your new parameter.  Here is one way you might find those
 scripts:
 
 ```
-cd kubernetes && git grep 'kube-dns.yaml'
+cd kubernetes && git grep "kube-dns.yaml"
 ```
 
 ### Base Template files
