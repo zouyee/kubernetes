@@ -87,9 +87,10 @@ func internalRecycleVolumeByWatchingPodUntilCompletion(pvName string, pod *v1.Po
 			// Recycler will try again and the old pod will be hopefuly deleted
 			// at that time.
 			return fmt.Errorf("old recycler pod found, will retry later")
-		} else {
-			return fmt.Errorf("unexpected error creating recycler pod:  %+v\n", err)
-		}
+		} 
+		
+		return fmt.Errorf("unexpected error creating recycler pod:  %+v", err)
+		
 	}
 	err = waitForPod(pod, recyclerClient, podCh)
 
