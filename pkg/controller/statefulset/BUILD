@@ -18,6 +18,7 @@ go_library(
     importpath = "k8s.io/kubernetes/pkg/controller/statefulset",
     deps = [
         "//pkg/api/v1/pod:go_default_library",
+        "//pkg/volume:go_default_library"
         "//pkg/controller:go_default_library",
         "//pkg/controller/history:go_default_library",
         "//vendor/github.com/golang/glog:go_default_library",
