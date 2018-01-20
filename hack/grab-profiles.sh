@@ -70,7 +70,7 @@ if [[ $? -ne 0 ]]; then
   exit 1
 fi
 
-HEAPSTER_VERSION="v0.18.2"
+HEAPSTER_VERSION="v1.5.0"
 MASTER_PPROF_PATH=""
 HEAPSTER_PPROF_PATH="/api/v1/proxy/namespaces/kube-system/services/monitoring-heapster"
 KUBELET_PPROF_PATH_PREFIX="/api/v1/proxy/nodes"
@@ -293,8 +293,8 @@ for component in ${profile_components}; do
   if [[ "${component}" == "kubelet" ]]; then
     for node in $(echo ${kubelet_addreses} | sed 's/[,;]/\n/g'); do
       grab_profiles_from_component "${requested_profiles}" "${mem_pprof_flags}" "${binary}" "${tunnel_port}" "${path}/${node}" "${output_dir}/${component}" "${timestamp}"
-    done    
-  else 
+    done
+  else
     grab_profiles_from_component "${requested_profiles}" "${mem_pprof_flags}" "${binary}" "${tunnel_port}" "${path}" "${output_dir}/${component}" "${timestamp}"
   fi
 done
