@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/klog"
 	podutil "k8s.io/kubernetes/pkg/api/v1/pod"
@@ -197,7 +197,9 @@ func (w *worker) doProbe() (keepGoing bool) {
 			w.resultsManager.Remove(w.containerID)
 		}
 		w.containerID = kubecontainer.ParseContainerID(c.ContainerID)
-		w.resultsManager.Set(w.containerID, w.initialValue, w.pod)
+		if c.State.Running == nil || int32(time.Since(c.State.Running.StartedAt.Time).Seconds()) < w.spec.InitialDelaySeconds {
+			w.resultsManager.Set(w.containerID, w.initialValue, w.pod)
+		}
 		// We've got a new container; resume probing.
 		w.onHold = false
 	}
