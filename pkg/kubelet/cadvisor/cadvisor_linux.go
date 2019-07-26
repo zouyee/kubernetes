@@ -71,6 +71,8 @@ func init() {
 		// Disable event storage by default.
 		"event_storage_event_limit": "default=0",
 		"event_storage_age_limit":   "default=0",
+		// enable cpu load reader for container_tasks_state
+		"enable_load_reader": "true",
 	}
 	for name, defaultValue := range flagOverrides {
 		if f := flag.Lookup(name); f != nil {
