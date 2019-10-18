@@ -32,6 +32,7 @@ import (
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/nodeports"
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/nodepreferavoidpods"
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/noderesources"
+	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/nodeutilization"
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/nodevolumelimits"
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/tainttoleration"
 	"k8s.io/kubernetes/pkg/scheduler/framework/plugins/volumebinding"
@@ -65,13 +66,16 @@ func NewDefaultRegistry(args *RegistryArgs) framework.Registry {
 	classInfo := &predicates.CachedStorageClassInfo{StorageClassLister: args.StorageClassLister}
 
 	return framework.Registry{
-		imagelocality.Name:       imagelocality.New,
-		tainttoleration.Name:     tainttoleration.New,
-		noderesources.Name:       noderesources.New,
-		nodename.Name:            nodename.New,
-		nodeports.Name:           nodeports.New,
-		nodepreferavoidpods.Name: nodepreferavoidpods.New,
-		nodeaffinity.Name:        nodeaffinity.New,
+		imagelocality.Name:                          imagelocality.New,
+		tainttoleration.Name:                        tainttoleration.New,
+		noderesources.Name:                          noderesources.New,
+		nodename.Name:                               nodename.New,
+		nodeports.Name:                              nodeports.New,
+		nodepreferavoidpods.Name:                    nodepreferavoidpods.New,
+		nodeaffinity.Name:                           nodeaffinity.New,
+		nodeutilization.BalancedNodeUtilizationName: nodeutilization.NewBalancedNodeUtilization,
+		nodeutilization.HighNodeUtilizationName:     nodeutilization.NewHighNodeUtilization,
+		nodeutilization.LowNodeUtilizationName:      nodeutilization.NewLowNodeUtilization,
 		volumebinding.Name: func(_ *runtime.Unknown, _ framework.FrameworkHandle) (framework.Plugin, error) {
 			return volumebinding.NewFromVolumeBinder(args.VolumeBinder), nil
 		},
@@ -176,6 +180,24 @@ func NewDefaultConfigProducerRegistry() *ConfigProducerRegistry {
 	registry.RegisterPriority(priorities.NodePreferAvoidPodsPriority,
 		func(args ConfigProducerArgs) (plugins config.Plugins, pluginConfig []config.PluginConfig) {
 			plugins.Score = appendToPluginSet(plugins.Score, nodepreferavoidpods.Name, &args.Weight)
+			return
+		})
+
+	registry.RegisterPriority(priorities.MostRequestedPriority,
+		func(args ConfigProducerArgs) (plugins config.Plugins, pluginConfig []config.PluginConfig) {
+			plugins.Score = appendToPluginSet(plugins.Score, nodeutilization.HighNodeUtilizationName, &args.Weight)
+			return
+		})
+
+	registry.RegisterPriority(priorities.BalancedResourceAllocation,
+		func(args ConfigProducerArgs) (plugins config.Plugins, pluginConfig []config.PluginConfig) {
+			plugins.Score = appendToPluginSet(plugins.Score, nodeutilization.BalancedNodeUtilizationName, &args.Weight)
+			return
+		})
+
+	registry.RegisterPriority(priorities.LeastRequestedPriority,
+		func(args ConfigProducerArgs) (plugins config.Plugins, pluginConfig []config.PluginConfig) {
+			plugins.Score = appendToPluginSet(plugins.Score, nodeutilization.NewLowNodeUtilization, &args.Weight)
 			return
 		})
 

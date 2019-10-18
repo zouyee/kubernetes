@@ -70,7 +70,6 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 				"TestLabelsPresence",
 			),
 			wantPrioritizers: sets.NewString(
-				"LeastRequestedPriority",
 				"ServiceSpreadingPriority",
 				"TestServiceAntiAffinity",
 				"TestLabelPreference",
@@ -80,6 +79,9 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 					{Name: "NodeAffinity"},
 					{Name: "NodeResources"},
 					{Name: "VolumeRestrictions"},
+				},
+				"ScorePlugin": {
+					{Name: "LowNodeUtilization", Weight: 2},
 				},
 			},
 		},
@@ -113,8 +115,6 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 			),
 			wantPrioritizers: sets.NewString(
 				"EqualPriority",
-				"LeastRequestedPriority",
-				"BalancedResourceAllocation",
 				"SelectorSpreadPriority",
 				"TestServiceAntiAffinity",
 				"TestLabelPreference",
@@ -126,6 +126,10 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 					{Name: "NodeAffinity"},
 					{Name: "NodeResources"},
 					{Name: "VolumeRestrictions"},
+				},
+				"ScorePlugin": {
+					{Name: "LowNodeUtilization", Weight: 2},
+					{Name: "BalancedNodeUtilization", Weight: 2},
 				},
 			},
 		},
@@ -168,8 +172,6 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 			),
 			wantPrioritizers: sets.NewString(
 				"EqualPriority",
-				"LeastRequestedPriority",
-				"BalancedResourceAllocation",
 				"SelectorSpreadPriority",
 				"TestServiceAntiAffinity",
 				"TestLabelPreference",
@@ -185,6 +187,8 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 				},
 				"ScorePlugin": {
 					{Name: "ImageLocality", Weight: 2},
+					{Name: "LowNodeUtilization", Weight: 2},
+					{Name: "BalancedNodeUtilization", Weight: 2},
 					{Name: "NodeAffinity", Weight: 2},
 				},
 			},
@@ -235,8 +239,6 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 			),
 			wantPrioritizers: sets.NewString(
 				"EqualPriority",
-				"LeastRequestedPriority",
-				"BalancedResourceAllocation",
 				"SelectorSpreadPriority",
 				"InterPodAffinityPriority",
 			),
@@ -252,6 +254,8 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 				},
 				"ScorePlugin": {
 					{Name: "ImageLocality", Weight: 2},
+					{Name: "LowNodeUtilization", Weight: 2},
+					{Name: "BalancedNodeUtilization", Weight: 2},
 					{Name: "NodeAffinity", Weight: 2},
 					{Name: "TaintToleration", Weight: 2},
 				},
@@ -307,11 +311,8 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 			),
 			wantPrioritizers: sets.NewString(
 				"EqualPriority",
-				"LeastRequestedPriority",
-				"BalancedResourceAllocation",
 				"SelectorSpreadPriority",
 				"InterPodAffinityPriority",
-				"MostRequestedPriority",
 			),
 			wantPlugins: map[string][]kubeschedulerconfig.Plugin{
 				"FilterPlugin": {
@@ -325,9 +326,12 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 				},
 				"ScorePlugin": {
 					{Name: "ImageLocality", Weight: 2},
+					{Name: "LowNodeUtilization", Weight: 2},
+					{Name: "BalancedNodeUtilization", Weight: 2},
 					{Name: "NodeAffinity", Weight: 2},
 					{Name: "NodePreferAvoidPods", Weight: 2},
 					{Name: "TaintToleration", Weight: 2},
+					{Name: "HighNodeUtilization", Weight: 2},
 				},
 			},
 		},
@@ -390,11 +394,8 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 			),
 			wantPrioritizers: sets.NewString(
 				"EqualPriority",
-				"LeastRequestedPriority",
-				"BalancedResourceAllocation",
 				"SelectorSpreadPriority",
 				"InterPodAffinityPriority",
-				"MostRequestedPriority",
 			),
 			wantPlugins: map[string][]kubeschedulerconfig.Plugin{
 				"FilterPlugin": {
@@ -408,9 +409,12 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 				},
 				"ScorePlugin": {
 					{Name: "ImageLocality", Weight: 2},
+					{Name: "LowNodeUtilization", Weight: 2},
+					{Name: "BalancedNodeUtilization", Weight: 2},
 					{Name: "NodeAffinity", Weight: 2},
 					{Name: "NodePreferAvoidPods", Weight: 2},
 					{Name: "TaintToleration", Weight: 2},
+					{Name: "HighNodeUtilization", Weight: 2},
 				},
 			},
 			wantExtenders: []schedulerapi.ExtenderConfig{{
@@ -486,11 +490,8 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 			),
 			wantPrioritizers: sets.NewString(
 				"EqualPriority",
-				"LeastRequestedPriority",
-				"BalancedResourceAllocation",
 				"SelectorSpreadPriority",
 				"InterPodAffinityPriority",
-				"MostRequestedPriority",
 			),
 			wantPlugins: map[string][]kubeschedulerconfig.Plugin{
 				"FilterPlugin": {
@@ -504,9 +505,12 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 				},
 				"ScorePlugin": {
 					{Name: "ImageLocality", Weight: 2},
+					{Name: "LowNodeUtilization", Weight: 2},
+					{Name: "BalancedNodeUtilization", Weight: 2},
 					{Name: "NodeAffinity", Weight: 2},
 					{Name: "NodePreferAvoidPods", Weight: 2},
 					{Name: "TaintToleration", Weight: 2},
+					{Name: "HighNodeUtilization", Weight: 2},
 				},
 			},
 			wantExtenders: []schedulerapi.ExtenderConfig{{
@@ -583,11 +587,8 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 			),
 			wantPrioritizers: sets.NewString(
 				"EqualPriority",
-				"LeastRequestedPriority",
-				"BalancedResourceAllocation",
 				"SelectorSpreadPriority",
 				"InterPodAffinityPriority",
-				"MostRequestedPriority",
 			),
 			wantPlugins: map[string][]kubeschedulerconfig.Plugin{
 				"FilterPlugin": {
@@ -602,9 +603,12 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 				},
 				"ScorePlugin": {
 					{Name: "ImageLocality", Weight: 2},
+					{Name: "LowNodeUtilization", Weight: 2},
+					{Name: "BalancedNodeUtilization", Weight: 2},
 					{Name: "NodeAffinity", Weight: 2},
 					{Name: "NodePreferAvoidPods", Weight: 2},
 					{Name: "TaintToleration", Weight: 2},
+					{Name: "HighNodeUtilization", Weight: 2},
 				},
 			},
 			wantExtenders: []schedulerapi.ExtenderConfig{{
@@ -686,11 +690,8 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 			),
 			wantPrioritizers: sets.NewString(
 				"EqualPriority",
-				"LeastRequestedPriority",
-				"BalancedResourceAllocation",
 				"SelectorSpreadPriority",
 				"InterPodAffinityPriority",
-				"MostRequestedPriority",
 			),
 			wantPlugins: map[string][]kubeschedulerconfig.Plugin{
 				"FilterPlugin": {
@@ -705,9 +706,12 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 				},
 				"ScorePlugin": {
 					{Name: "ImageLocality", Weight: 2},
+					{Name: "LowNodeUtilization", Weight: 2},
+					{Name: "BalancedNodeUtilization", Weight: 2},
 					{Name: "NodeAffinity", Weight: 2},
 					{Name: "NodePreferAvoidPods", Weight: 2},
 					{Name: "TaintToleration", Weight: 2},
+					{Name: "HighNodeUtilization", Weight: 2},
 				},
 			},
 			wantExtenders: []schedulerapi.ExtenderConfig{{
@@ -801,11 +805,8 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 			),
 			wantPrioritizers: sets.NewString(
 				"EqualPriority",
-				"LeastRequestedPriority",
-				"BalancedResourceAllocation",
 				"SelectorSpreadPriority",
 				"InterPodAffinityPriority",
-				"MostRequestedPriority",
 				"RequestedToCapacityRatioPriority",
 			),
 			wantPlugins: map[string][]kubeschedulerconfig.Plugin{
@@ -821,9 +822,12 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 				},
 				"ScorePlugin": {
 					{Name: "ImageLocality", Weight: 2},
+					{Name: "LowNodeUtilization", Weight: 2},
+					{Name: "BalancedNodeUtilization", Weight: 2},
 					{Name: "NodeAffinity", Weight: 2},
 					{Name: "NodePreferAvoidPods", Weight: 2},
 					{Name: "TaintToleration", Weight: 2},
+					{Name: "HighNodeUtilization", Weight: 2},
 				},
 			},
 			wantExtenders: []schedulerapi.ExtenderConfig{{
@@ -918,11 +922,8 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 			),
 			wantPrioritizers: sets.NewString(
 				"EqualPriority",
-				"LeastRequestedPriority",
-				"BalancedResourceAllocation",
 				"SelectorSpreadPriority",
 				"InterPodAffinityPriority",
-				"MostRequestedPriority",
 				"RequestedToCapacityRatioPriority",
 			),
 			wantPlugins: map[string][]kubeschedulerconfig.Plugin{
@@ -939,9 +940,12 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 				},
 				"ScorePlugin": {
 					{Name: "ImageLocality", Weight: 2},
+					{Name: "LowNodeUtilization", Weight: 2},
+					{Name: "BalancedNodeUtilization", Weight: 2},
 					{Name: "NodeAffinity", Weight: 2},
 					{Name: "NodePreferAvoidPods", Weight: 2},
 					{Name: "TaintToleration", Weight: 2},
+					{Name: "HighNodeUtilization", Weight: 2},
 				},
 			},
 			wantExtenders: []schedulerapi.ExtenderConfig{{
@@ -1036,11 +1040,8 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 			),
 			wantPrioritizers: sets.NewString(
 				"EqualPriority",
-				"LeastRequestedPriority",
-				"BalancedResourceAllocation",
 				"SelectorSpreadPriority",
 				"InterPodAffinityPriority",
-				"MostRequestedPriority",
 				"RequestedToCapacityRatioPriority",
 			),
 			wantPlugins: map[string][]kubeschedulerconfig.Plugin{
@@ -1057,9 +1058,12 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 				},
 				"ScorePlugin": {
 					{Name: "ImageLocality", Weight: 2},
+					{Name: "LowNodeUtilization", Weight: 2},
+					{Name: "BalancedNodeUtilization", Weight: 2},
 					{Name: "NodeAffinity", Weight: 2},
 					{Name: "NodePreferAvoidPods", Weight: 2},
 					{Name: "TaintToleration", Weight: 2},
+					{Name: "HighNodeUtilization", Weight: 2},
 				},
 			},
 			wantExtenders: []schedulerapi.ExtenderConfig{{
@@ -1158,11 +1162,8 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 			),
 			wantPrioritizers: sets.NewString(
 				"EqualPriority",
-				"LeastRequestedPriority",
-				"BalancedResourceAllocation",
 				"SelectorSpreadPriority",
 				"InterPodAffinityPriority",
-				"MostRequestedPriority",
 				"RequestedToCapacityRatioPriority",
 			),
 			wantPlugins: map[string][]kubeschedulerconfig.Plugin{
@@ -1179,9 +1180,12 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 				},
 				"ScorePlugin": {
 					{Name: "ImageLocality", Weight: 2},
+					{Name: "LowNodeUtilization", Weight: 2},
+					{Name: "BalancedNodeUtilization", Weight: 2},
 					{Name: "NodeAffinity", Weight: 2},
 					{Name: "NodePreferAvoidPods", Weight: 2},
 					{Name: "TaintToleration", Weight: 2},
+					{Name: "HighNodeUtilization", Weight: 2},
 				},
 			},
 			wantExtenders: []schedulerapi.ExtenderConfig{{
@@ -1216,10 +1220,13 @@ func TestCompatibility_v1_Scheduler(t *testing.T) {
 		"NodeVolumeLimits":   "MaxCSIVolumeCountPred",
 	}
 	scoreToPriorityMap := map[string]string{
-		"ImageLocality":       "ImageLocalityPriority",
-		"NodeAffinity":        "NodeAffinityPriority",
-		"NodePreferAvoidPods": "NodePreferAvoidPodsPriority",
-		"TaintToleration":     "TaintTolerationPriority",
+		"ImageLocality":           "ImageLocalityPriority",
+		"NodeAffinity":            "NodeAffinityPriority",
+		"NodePreferAvoidPods":     "NodePreferAvoidPodsPriority",
+		"TaintToleration":         "TaintTolerationPriority",
+		"LowNodeUtilization":      "LeastRequestedPriority",
+		"BalancedNodeUtilization": "BalancedResourceAllocation",
+		"HighNodeUtilization":     "MostRequestedPriority",
 	}
 
 	for v, tc := range schedulerFiles {
