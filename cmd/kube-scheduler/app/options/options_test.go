@@ -23,15 +23,13 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
-	"reflect"
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/diff"
 	apiserveroptions "k8s.io/apiserver/pkg/server/options"
 	componentbaseconfig "k8s.io/component-base/config"
 	kubeschedulerconfig "k8s.io/kubernetes/pkg/scheduler/apis/config"
@@ -99,6 +97,17 @@ users:
   user:
     username: config
 `, server.URL)), os.FileMode(0600)); err != nil {
+		t.Fatal(err)
+	}
+
+	featureGatesConfig := filepath.Join(tmpDir, "featuregates_field.yaml")
+	if err := ioutil.WriteFile(featureGatesConfig, []byte(fmt.Sprintf(`
+apiVersion: kubescheduler.config.k8s.io/v1alpha1
+kind: KubeSchedulerConfiguration
+clientConnection:
+  kubeconfig: "%s"
+featureGates:
+  ResourceLimitsPriorityFunction: true`, configKubeconfig)), os.FileMode(0600)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -606,6 +615,97 @@ pluginConfig:
 				Plugins:                  nil,
 			},
 		},
+		{
+			name: "feature gate config",
+			options: &Options{
+				ComponentConfig: func() kubeschedulerconfig.KubeSchedulerConfiguration {
+					cfg, _ := newDefaultComponentConfig()
+					cfg.ClientConnection.Kubeconfig = flagKubeconfig
+					cfg.FeatureGates = map[string]bool{
+						"EvenPodsSpread": true,
+					}
+					return *cfg
+				}(),
+			},
+			expectedConfig: kubeschedulerconfig.KubeSchedulerConfiguration{
+				SchedulerName:                  "default-scheduler",
+				AlgorithmSource:                kubeschedulerconfig.SchedulerAlgorithmSource{Provider: &defaultSource},
+				HardPodAffinitySymmetricWeight: 1,
+				HealthzBindAddress:             "", // defaults empty when not running from config file
+				MetricsBindAddress:             "", // defaults empty when not running from config file
+				DebuggingConfiguration: componentbaseconfig.DebuggingConfiguration{
+					EnableProfiling:           true,
+					EnableContentionProfiling: true,
+				},
+				LeaderElection: kubeschedulerconfig.KubeSchedulerLeaderElectionConfiguration{
+					LeaderElectionConfiguration: componentbaseconfig.LeaderElectionConfiguration{
+						LeaderElect:       true,
+						LeaseDuration:     metav1.Duration{Duration: 15 * time.Second},
+						RenewDeadline:     metav1.Duration{Duration: 10 * time.Second},
+						RetryPeriod:       metav1.Duration{Duration: 2 * time.Second},
+						ResourceLock:      "endpointsleases",
+						ResourceNamespace: "kube-system",
+						ResourceName:      "kube-scheduler",
+					},
+				},
+				ClientConnection: componentbaseconfig.ClientConnectionConfiguration{
+					Kubeconfig:  flagKubeconfig,
+					QPS:         50,
+					Burst:       100,
+					ContentType: "application/vnd.kubernetes.protobuf",
+				},
+				PercentageOfNodesToScore: defaultPercentageOfNodesToScore,
+				BindTimeoutSeconds:       defaultBindTimeoutSeconds,
+				PodInitialBackoffSeconds: defaultPodInitialBackoffSeconds,
+				PodMaxBackoffSeconds:     defaultPodMaxBackoffSeconds,
+				FeatureGates: map[string]bool{
+					"EvenPodsSpread": true,
+				},
+			},
+			expectedUsername: "flag",
+		},
+		{
+			name: "feature gate with config file",
+			options: &Options{
+				ConfigFile: featureGatesConfig,
+			},
+			expectedConfig: kubeschedulerconfig.KubeSchedulerConfiguration{
+				SchedulerName:                  "default-scheduler",
+				AlgorithmSource:                kubeschedulerconfig.SchedulerAlgorithmSource{Provider: &defaultSource},
+				HardPodAffinitySymmetricWeight: 1,
+				HealthzBindAddress:             "0.0.0.0:10251",
+				MetricsBindAddress:             "0.0.0.0:10251",
+				DebuggingConfiguration: componentbaseconfig.DebuggingConfiguration{
+					EnableProfiling:           true,
+					EnableContentionProfiling: true,
+				},
+				LeaderElection: kubeschedulerconfig.KubeSchedulerLeaderElectionConfiguration{
+					LeaderElectionConfiguration: componentbaseconfig.LeaderElectionConfiguration{
+						LeaderElect:       true,
+						LeaseDuration:     metav1.Duration{Duration: 15 * time.Second},
+						RenewDeadline:     metav1.Duration{Duration: 10 * time.Second},
+						RetryPeriod:       metav1.Duration{Duration: 2 * time.Second},
+						ResourceLock:      "endpointsleases",
+						ResourceNamespace: "kube-system",
+						ResourceName:      "kube-scheduler",
+					},
+				},
+				ClientConnection: componentbaseconfig.ClientConnectionConfiguration{
+					Kubeconfig:  configKubeconfig,
+					QPS:         50,
+					Burst:       100,
+					ContentType: "application/vnd.kubernetes.protobuf",
+				},
+				PercentageOfNodesToScore: defaultPercentageOfNodesToScore,
+				BindTimeoutSeconds:       defaultBindTimeoutSeconds,
+				PodInitialBackoffSeconds: defaultPodInitialBackoffSeconds,
+				PodMaxBackoffSeconds:     defaultPodMaxBackoffSeconds,
+				FeatureGates: map[string]bool{
+					"ResourceLimitsPriorityFunction": true,
+				},
+			},
+			expectedUsername: "config",
+		},
 	}
 
 	for _, tc := range testcases {
@@ -628,10 +728,9 @@ pluginConfig:
 				return
 			}
 
-			if !reflect.DeepEqual(config.ComponentConfig, tc.expectedConfig) {
-				t.Errorf("config.diff:\n%s", diff.ObjectReflectDiff(tc.expectedConfig, config.ComponentConfig))
+			if diff := cmp.Diff(tc.expectedConfig, config.ComponentConfig); diff != "" {
+				t.Errorf("unexpected ComponentConfig diff (-want, +got): %s", diff)
 			}
-
 			// ensure we have a client
 			if config.Client == nil {
 				t.Error("unexpected nil client")

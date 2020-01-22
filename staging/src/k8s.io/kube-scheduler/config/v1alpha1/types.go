@@ -104,6 +104,8 @@ type KubeSchedulerConfiguration struct {
 	// PluginConfig is an optional set of custom plugin arguments for each plugin.
 	// Omitting config args for a plugin is equivalent to using the default config for that plugin.
 	PluginConfig []PluginConfig `json:"pluginConfig,omitempty"`
+	// FeatureGates is a map of feature names to bools that enable or disable alpha/experimental features.
+	FeatureGates map[string]bool `json:"featureGates,omitempty"`
 }
 
 // SchedulerAlgorithmSource is the source of a scheduler algorithm. One source
